@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+# Keep archived downloads and local environments out of Git.
+archive/
+*.part
+.R-library/
+.Rhistory
+.RData
+.Rproj.user/
+outputs/
