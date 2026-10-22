@@ -1,0 +1,15 @@
+INVA species records: 4962
+Unreadable INVA geometries excluded: 6
+Invalid original INVA geometries (readable ones repaired in R): 91
+INVA presence polygons: 4753
+GBIF records: 180
+GBIF records overlapping INVA: 33
+GBIF records passing preliminary check screen: 27
+Grid cells: 65014
+Complete predictor cells: 64537
+Model table presence cells: 2814
+Model table background cells: 8442
+Predictors: 64
+All original files passed before/after SHA-256 verification.
+No habitat model has been fitted. Background labels are not confirmed absences.
+Distance to INVA, IDs, coordinates, block IDs, labels and audit flags are not predictors.
