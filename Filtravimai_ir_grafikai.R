@@ -1,3 +1,11 @@
+script_file <- NULL
+for (frame in sys.frames()) if (!is.null(frame$ofile)) script_file <- frame$ofile
+if (is.null(script_file)) {
+  script_file <- sub("^--file=", "", grep("^--file=", commandArgs(), value = TRUE)[1])
+}
+if (is.na(script_file)) stop("Run the complete script using Source in RStudio or Rscript.")
+setwd(dirname(normalizePath(script_file, winslash = "/", mustWork = TRUE)))
+
 #Builds the 1 km modelling tables and the maps from the files in "data"
 library(sf)
 library(terra)
@@ -14,7 +22,25 @@ background_buffer_m <- 1000 #background cells must be farther than this from any
 
 data_file <- function(f) file.path("data", f)
 write_processed <- function(x, f) {
-  write.csv(x, file.path("data", "processed", f), row.names = FALSE, fileEncoding = "UTF-8", na = "")
+  output_dir <- file.path("data", "processed")
+  dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
+  output_dir <- normalizePath(output_dir, winslash = "/", mustWork = TRUE)
+  output_path <- file.path(output_dir, f)
+
+  # Write a complete CSV before attempting to replace an existing, possibly locked file.
+  new_path <- tempfile(paste0(tools::file_path_sans_ext(f), "_"),
+                       tmpdir = output_dir, fileext = ".csv")
+  write.csv(x, new_path, row.names = FALSE, fileEncoding = "UTF-8", na = "")
+  if (suppressWarnings(file.copy(new_path, output_path, overwrite = TRUE))) {
+    unlink(new_path)
+    invisible(output_path)
+  } else {
+    warning("Could not replace ", output_path,
+            ". Close the CSV in Excel or another application and check write permissions. ",
+            "This run's table was saved as ",
+            new_path, ".", call. = FALSE)
+    invisible(new_path)
+  }
 }
 
 
@@ -221,7 +247,7 @@ muted <- "#657B78"
 
 map_theme <- theme_minimal(base_size = 11, base_family = "sans") + theme(
   plot.background = element_rect(fill = paper, colour = NA),
-  panel.background = element_rect(fill = "white", colour = NA),
+  panel.background = element_rect(fill = paper, colour = NA),
   panel.grid.major = element_line(colour = "white", linewidth = 0.25),
   plot.title = element_text(face = "bold", colour = ink, size = 16, hjust = 0.5),
   plot.subtitle = element_text(colour = muted, size = 10, hjust = 0.5),
@@ -239,7 +265,7 @@ map_coord <- function() {
 }
 
 map_base <- function(title, subtitle, caption) {
-  ggplot() + geom_sf(data = boundary, fill = "white", colour = NA) +
+  ggplot() + geom_sf(data = boundary, fill = paper, colour = NA) +
     scale_x_continuous(labels = function(x) format(x / 1000, trim = TRUE)) +
     scale_y_continuous(labels = function(y) format(y / 1000, trim = TRUE)) +
     labs(title = title, subtitle = paste(strwrap(subtitle, width = 85), collapse = "\n"),
@@ -250,9 +276,21 @@ map_base <- function(title, subtitle, caption) {
 outline <- function() geom_sf(data = boundary, fill = NA, colour = ink, linewidth = 0.3)
 
 save_map <- function(p, file, width = 9, height = 6.6) {
+  dir.create("maps", recursive = TRUE, showWarnings = FALSE)
   if (interactive()) print(p)
   ggsave(file.path("maps", paste0(file, ".png")), p, width = width, height = height, dpi = 220, bg = paper)
-  ggsave(file.path("maps", paste0(file, ".pdf")), p, width = width, height = height, device = cairo_pdf, bg = paper)
+
+  # Render to a new file first; an open PDF viewer may lock the previous PDF.
+  pdf_path <- file.path("maps", paste0(file, ".pdf"))
+  pdf_new <- tempfile(paste0(file, "_"), tmpdir = "maps", fileext = ".pdf")
+  ggsave(pdf_new, p, width = width, height = height, device = grDevices::pdf, bg = paper)
+  if (suppressWarnings(file.copy(pdf_new, pdf_path, overwrite = TRUE))) {
+    unlink(pdf_new)
+  } else {
+    warning("Could not replace ", pdf_path,
+            ". Close it in the PDF viewer. The new PDF was saved as ",
+            normalizePath(pdf_new, winslash = "/"), call. = FALSE)
+  }
 }
 
 #Occurrences

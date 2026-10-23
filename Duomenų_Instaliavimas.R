@@ -1,3 +1,11 @@
+script_file <- NULL
+for (frame in sys.frames()) if (!is.null(frame$ofile)) script_file <- frame$ofile
+if (is.null(script_file)) {
+  script_file <- sub("^--file=", "", grep("^--file=", commandArgs(), value = TRUE)[1])
+}
+if (is.na(script_file)) stop("Run the complete script using Source in RStudio or Rscript.")
+setwd(dirname(normalizePath(script_file, winslash = "/", mustWork = TRUE)))
+
 #Downloading the datasets
 dir.create("data", showWarnings = FALSE)
 

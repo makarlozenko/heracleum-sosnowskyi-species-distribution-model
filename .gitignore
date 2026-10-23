@@ -1,0 +1,12 @@
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+Rplots.pdf
+
+/data/*
+!/data/processed/
+/data/processed/*
+!/data/processed/model_table.csv
+/maps/
+/plots/data_analysis/
