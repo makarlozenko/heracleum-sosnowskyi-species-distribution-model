@@ -216,12 +216,12 @@ write_processed(model_table, "model_table.csv")
 
 #Maps
 ink <- "#183C3B"
-paper <- "#F6F4ED"
+paper <- "white"
 muted <- "#657B78"
 
 map_theme <- theme_minimal(base_size = 11, base_family = "sans") + theme(
   plot.background = element_rect(fill = paper, colour = NA),
-  panel.background = element_rect(fill = "#E6EEEB", colour = NA),
+  panel.background = element_rect(fill = "white", colour = NA),
   panel.grid.major = element_line(colour = "white", linewidth = 0.25),
   plot.title = element_text(face = "bold", colour = ink, size = 16, hjust = 0.5),
   plot.subtitle = element_text(colour = muted, size = 10, hjust = 0.5),
@@ -239,7 +239,7 @@ map_coord <- function() {
 }
 
 map_base <- function(title, subtitle, caption) {
-  ggplot() + geom_sf(data = boundary, fill = "#EDF0E8", colour = NA) +
+  ggplot() + geom_sf(data = boundary, fill = "white", colour = NA) +
     scale_x_continuous(labels = function(x) format(x / 1000, trim = TRUE)) +
     scale_y_continuous(labels = function(y) format(y / 1000, trim = TRUE)) +
     labs(title = title, subtitle = paste(strwrap(subtitle, width = 85), collapse = "\n"),
