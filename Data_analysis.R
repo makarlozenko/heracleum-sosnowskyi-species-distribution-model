@@ -1,13 +1,12 @@
+library(ggplot2)
+
 output_dir <- file.path(getwd(), "plot")
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
-library(ggplot2)
-
-# Run from the project folder containing data/processed/model_table.csv.
 d <- read.csv(file.path("data", "processed", "model_table.csv"))
 stopifnot(!anyNA(d$y), setequal(d$y, c(0, 1)))
 
-# Climate, distances, land cover, correlations and sample sizes.
+# Climate, distances, land cover, correlations and sample sizes
 colors <- c('#6DCDF4','#78003F')
 group <- factor(d$y,levels=c(0,1),labels=c('Background','Presence'))
 climate <- c('bio1_temp_mean_c','bio4_temp_sd_x100','bio8_temp_wettest_quarter_c','bio12_precip_annual_mm','bio13_precip_wettest_month_mm','elevation_m')
@@ -84,7 +83,7 @@ p <- barplot(n,horiz=TRUE,col=colors,border=NA,names.arg=levels(group),las=1,xli
 text(n+150,p,labels=paste0(format(n,big.mark=',',trim=TRUE),' (',round(100*n/sum(n)),'%)'),pos=4,cex=.9)
 finish('Cells in the analysis')
 
-# Standardised mean differences.
+# Standardised mean differences
 v <- c('lc_fraction_artificial','bio4_temp_sd_x100','elevation_m','bio8_temp_wettest_quarter_c','lc_fraction_water','distance_waterway_m','lc_fraction_agriculture','lc_fraction_wetland','lc_fraction_forest_seminatural','distance_settlement_m','bio1_temp_mean_c','bio12_precip_annual_mm','bio13_precip_wettest_month_mm','distance_road_m')
 labels <- c('Artificial surfaces','Temperature seasonality','Elevation','Wettest-quarter temperature','Water bodies','Distance to waterway','Agriculture','Wetlands','Forest / semi-natural','Distance to settlement','Annual mean temperature','Annual precipitation','Wettest-month precipitation','Distance to road')
 smd <- sapply(v,function(k) {a <- d[d$y==1,k]; b <- d[d$y==0,k]; (mean(a)-mean(b))/sqrt(((length(a)-1)*var(a)+(length(b)-1)*var(b))/(length(a)+length(b)-2))})
@@ -101,7 +100,7 @@ axis(2,at=y,labels=labels,tick=FALSE,cex.axis=.85)
 text(smd,y,labels=sprintf('%+.2f',smd),pos=ifelse(smd<0,2,4),offset=.55,cex=.75,col='#333333')
 finish('Standardised mean differences')
 
-# Monthly climate differences (the original Overleaf heatmap).
+# Monthly climate differences (the original Overleaf heatmap)
 monthly <- grep("^(tavg|tmin|tmax|prec)_[0-9]{2}$", names(d), value = TRUE)
 effect_table <- do.call(rbind, lapply(monthly, function(variable) {
   x0 <- d[d$y == 0, variable]
