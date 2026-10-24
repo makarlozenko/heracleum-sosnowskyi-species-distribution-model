@@ -4,8 +4,8 @@ R scripts for preparing spatial data and exploring the environmental conditions 
 
 ## Files
 
-- `Duomenų_Instaliavimas.R` downloads occurrence records and environmental datasets into `data/`.
-- `Filtravimai_ir_grafikai.R` builds the 1 km modelling table at `data/processed/model_table.csv` and saves maps to `maps/`.
+- `Data_installation.R` downloads occurrence records and environmental datasets into `data/`.
+- `Filtering_and_plotting.R` builds the 1 km modelling table at `data/processed/model_table.csv` and saves maps to `maps/`.
 - `Data_analysis.R` produces the eight final analysis figures in `plot/` as 300 dpi PNG files. Re-running it replaces these files.
 - `hogweed.Rproj` opens the project in RStudio.
 
@@ -23,8 +23,8 @@ install.packages(c("sf", "terra", "ggplot2", "patchwork", "scales", "curl",
 Run the scripts in this order from the project folder:
 
 ```r
-source("Duomenų_Instaliavimas.R")
-source("Filtravimai_ir_grafikai.R")
+source("Data_installation.R")
+source("Filtering_and_plotting.R")
 source("Data_analysis.R")
 ```
 
