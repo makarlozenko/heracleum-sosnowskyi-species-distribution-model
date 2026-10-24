@@ -1,16 +1,10 @@
 library(ggplot2)
 library(patchwork)
 
-script_file <- NULL
-for (frame in sys.frames()) if (!is.null(frame$ofile)) script_file <- frame$ofile
-if (is.null(script_file)) {
-  script_file <- sub("^--file=", "", grep("^--file=", commandArgs(), value = TRUE)[1])
-}
-if (is.na(script_file)) stop("Run the complete script using Source in RStudio or Rscript.")
-project_dir <- dirname(normalizePath(script_file, winslash = "/", mustWork = TRUE))
-output_dir <- file.path(project_dir, "plots", "data_analysis", format(Sys.time(), "%Y-%m-%d_%H-%M-%S"))
+output_dir <- file.path(getwd(), "plot")
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
-data <- read.csv(file.path(project_dir, "data", "processed", "model_table.csv"))
+
+data <- read.csv(file.path(getwd(), "data", "processed", "model_table.csv"))
 stopifnot(!anyNA(data$y), setequal(data$y, c(0, 1)))
 data$group <- factor(data$y, levels = c(0, 1), labels = c("Background (0)", "Heracleum (1)"))
 
@@ -31,6 +25,7 @@ number_labels <- function(x) format(x, trim = TRUE, big.mark = ",", scientific =
 wrap_labels <- function(x, width = 30) {
   vapply(x, function(s) paste(strwrap(s, width), collapse = "\n"), character(1))
 }
+
 theme_set(theme_minimal(base_size = 13) +
             theme(legend.position = "bottom", legend.title = element_blank(),
                   panel.grid.minor = element_blank(), panel.grid.major.y = element_blank(),
@@ -48,6 +43,7 @@ long_table <- function(variables, labels) {
   d$variable <- factor(d$variable, levels = labels)
   d
 }
+
 climate_long <- long_table(climate, climate_labels)
 climate_long$value[climate_long$variable == climate_labels[2]] <-
   climate_long$value[climate_long$variable == climate_labels[2]] / 100
@@ -75,6 +71,7 @@ climate_panels <- function(type) {
       theme = theme(plot.title = element_text(hjust = .5, face = "bold", size = 19))) &
     theme(legend.position = if (type == "box") "none" else "bottom")
 }
+
 plots <- list(climate = climate_panels("box"), climate_densities = climate_panels("density"))
 
 cor_labels <- c("Annual temp.\n(\u00B0C)", "Temp. SD\n(\u00B0C)", "Wet quarter T\n(\u00B0C)",
@@ -85,6 +82,7 @@ correlation <- cor(data[main_variables], method = "spearman", use = "pairwise.co
 dimnames(correlation) <- list(cor_labels, cor_labels)
 correlation_table <- as.data.frame(as.table(correlation))
 correlation_table$label <- sprintf("%.2f", ifelse(abs(correlation_table$Freq) < .005, 0, correlation_table$Freq))
+
 plots$correlations <- ggplot(correlation_table, aes(Var1, Var2, fill = Freq)) +
   geom_tile(color = "white") +
   geom_text(aes(label = label, color = Freq > .65), size = 2.8) +
@@ -117,6 +115,7 @@ effect_table <- do.call(rbind, lapply(c(main_variables, monthly), function(varia
                       (length(x0) + length(x1) - 2))
   data.frame(variable = variable, difference = (mean(x1) - mean(x0)) / pooled_sd)
 }))
+
 main_effects <- effect_table[effect_table$variable %in% main_variables, ]
 main_effects$label <- unname(main_labels[main_effects$variable])
 plots$differences <- ggplot(main_effects, aes(difference, reorder(label, difference))) +
@@ -153,10 +152,11 @@ plots$fractions <- ggplot(cover_means, aes(value, variable, fill = group)) +
 monthly_effects <- effect_table[effect_table$variable %in% monthly, ]
 monthly_effects$month <- as.integer(sub(".*_", "", monthly_effects$variable))
 monthly_effects$type <- factor(sub("_.*", "", monthly_effects$variable),
-                              levels = c("prec", "tmax", "tmin", "tavg"),
-                              labels = c("Precipitation", "Maximum temperature", "Minimum temperature", "Mean temperature"))
+                               levels = c("prec", "tmax", "tmin", "tavg"),
+                               labels = c("Precipitation", "Maximum temperature", "Minimum temperature", "Mean temperature"))
 effect_limit <- max(abs(monthly_effects$difference))
 monthly_effects$label <- sprintf("%+.2f", ifelse(abs(monthly_effects$difference) < .005, 0, monthly_effects$difference))
+
 plots$monthly_differences <- ggplot(monthly_effects, aes(month, type, fill = difference)) +
   geom_tile(color = "white", linewidth = 1) +
   geom_text(aes(label = label, color = difference > .65 * effect_limit), size = 4) +
@@ -173,9 +173,11 @@ plots$monthly_differences <- ggplot(monthly_effects, aes(month, type, fill = dif
 sizes <- list(climate = c(16, 9), climate_densities = c(16, 9), correlations = c(14, 12),
               counts = c(9, 6), differences = c(13, 10), distances = c(12, 10),
               fractions = c(12, 7), monthly_differences = c(15, 6))
+
 for (name in names(plots)) {
   ggsave(file.path(output_dir, paste0(name, ".png")), plots[[name]], device = grDevices::png,
          width = sizes[[name]][1], height = sizes[[name]][2], units = "in", dpi = 300, bg = "white")
 }
-message("Saved ", length(plots), " PNG files to: ", output_dir)
+
+message("Saved ", length(plots), " PNG files directly to: ", output_dir)
 if (interactive()) for (p in plots) print(p)
