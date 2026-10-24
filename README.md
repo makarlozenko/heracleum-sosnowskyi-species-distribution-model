@@ -1,39 +1,33 @@
-# Heracleum sosnowskyi: exploratory data analysis
+# Heracleum sosnowskyi in Lithuania
 
-Compare environmental conditions in cells with recorded Heracleum presence (`y = 1`) and sampled background cells (`y = 0`). Background cells are not confirmed absences. The 3:1 background-to-presence ratio is a sampling choice, not an estimate of species prevalence.
+R scripts for preparing spatial data and exploring the environmental conditions associated with recorded Sosnowsky's hogweed presence in Lithuania.
 
-## Run the analysis
+## Files
 
-Clone or download this repository, then open `hogweed.Rproj` in RStudio. Install the required packages once:
+- `Duomenų_Instaliavimas.R` downloads occurrence records and environmental datasets into `data/`.
+- `Filtravimai_ir_grafikai.R` builds the 1 km modelling table at `data/processed/model_table.csv` and saves maps to `maps/`.
+- `Data_analysis.R` produces the eight final analysis figures in `plot/` as 300 dpi PNG files. Re-running it replaces these files.
+- `hogweed.Rproj` opens the project in RStudio.
+
+Downloaded data and generated outputs are not included in the repository.
+
+## Run
+
+Open `hogweed.Rproj` in RStudio and install the required packages once:
 
 ```r
-install.packages(c("ggplot2", "patchwork"))
+install.packages(c("sf", "terra", "ggplot2", "patchwork", "scales", "curl",
+                   "jsonlite", "DBI", "RSQLite", "foreign"))
 ```
 
-Run the complete script using **Source**, or execute:
+Run the scripts in this order from the project folder:
 
 ```r
+source("Duomenų_Instaliavimas.R")
+source("Filtravimai_ir_grafikai.R")
 source("Data_analysis.R")
 ```
 
-Alternatively, from a terminal:
+The download step requires internet access and retrieves large geospatial datasets. If `data/processed/model_table.csv` is already available, run only `Data_analysis.R` (requires `ggplot2` and `scales`).
 
-```sh
-Rscript /path/to/repository/Data_analysis.R
-```
-
-The script locates the repository from its own file path, independently of the current working directory. No local absolute paths need editing.
-
-The input table is included at `data/processed/model_table.csv`. Each run creates `plots/data_analysis/YYYY-MM-DD_HH-MM-SS/` beside the code and saves eight PNG figures at 300 dpi. No PDFs are created by the analysis script. Committed example figures are in `plots/`.
-
-Figures cover climate and elevation, climate densities, Spearman correlations, sample sizes, standardized mean differences, landscape distances, land cover fractions, and monthly standardized differences. Monthly differences use the pooled standard deviation so temperature and precipitation can be compared on one scale. Neighbouring cells are spatially dependent; these plots are descriptive comparisons, not causal estimates.
-
-## Optional: rebuild the input data
-
-The original geospatial datasets are not included. To download them and rebuild the modelling table and maps, install:
-
-```r
-install.packages(c("sf", "terra", "curl", "jsonlite", "DBI", "RSQLite", "foreign"))
-```
-
-Run `Duomenų_Instaliavimas.R` first and `Filtravimai_ir_grafikai.R` second. These scripts require network access and download large geospatial datasets. Raw data, intermediate tables, generated maps, and dated analysis runs are excluded from Git.
+The analysis compares recorded presence with sampled background cells. Background cells are not confirmed absences; the 3:1 sampling ratio does not estimate species prevalence.
